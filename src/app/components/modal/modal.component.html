@@ -1,0 +1,12 @@
+
+<h2 mat-dialog-title class="!text-3xl !font-bold">{{ data.title }}</h2>
+<mat-dialog-content class="!font-medium !p-3">
+  {{ data.message }}
+</mat-dialog-content>
+@if(isLoading){
+    <mat-progress-bar [mode]="'determinate'" [value]="value()"></mat-progress-bar>
+} 
+<mat-dialog-actions class="!flex !justify-evenly gap-3">
+  <button [classList]="isLoading ? 'border text-amber-50 flex-1 rounded-md bg-gray-500' : 'border text-amber-50 flex-1 rounded-md bg-green-500 cursor-pointer hover:transform transition-all ease-in hover:scale-105 hover:!bg-green-600'" [disabled]="isLoading" matButton (click)="cancel()">Cancelar</button>
+  <button [classList]="isLoading ? 'border text-amber-50 flex-1 rounded-md bg-gray-500' : 'border text-amber-50 flex-1 rounded-md bg-red-500 cursor-pointer hover:transform transition-all ease-in hover:scale-105 hover:!bg-red-600'" [disabled]="isLoading" matButton cdkFocusInitial  (click)="confirm()">Confirmar!</button>
+</mat-dialog-actions>
