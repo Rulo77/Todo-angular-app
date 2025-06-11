@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, inject, signal } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -43,7 +43,7 @@ export class AppComponent {
   // @ViewChildren('todoInput') todoInputs!: QueryList<ElementRef>;
   readonly todo = new FormControl('', [Validators.required]);
   todoList: TodoList[] = [];
-
+  readonly cdr = inject(ChangeDetectorRef);
   errorMessage = signal('');
 
   readonly modal = inject(MatDialog);
@@ -63,41 +63,90 @@ export class AppComponent {
   }
 
   addTodo() {
-    if (this.todo.value && this.todo.value.trim() !== '') {
-      const todoList: TodoList = {
-        id: this.todoList.length + 1,
-        value: this.todo.value,
-        isEditable: false,
-        completed: false
+    
+    setTimeout(() => {
+      // 1. Encontrar el ID más alto actual. Si la lista está vacía, empezamos en 0.
+      const maxId = this.todoList.length > 0 ? Math.max(...this.todoList.map(t => t.id)) : 0;
+      if (this.todo.value && this.todo.value.trim() !== '') {
+        const newTodo: TodoList = {
+          id: maxId + 1,
+          value: this.todo.value?.trim(),
+          isEditable: false,
+          completed: false
+        }
+        const newTodoList = [...this.todoList, newTodo];
+        console.log(newTodoList)
+        this.cdr.detectChanges();
+        // --- MEJORA DE INMUTABILIDAD ---
+        // En lugar de this.todoList.push(newTodo), creamos un nuevo array.
+        // Esto asegura que la detección de cambios de Angular se active correctamente.
+        this.todoList = [...newTodoList];
+        this.todo.reset();
+        this.errorMessage.set('');
       }
-      this.todoList.push(todoList);
-      this.todo.setValue('');
-      this.errorMessage.set('');
-    }
+    });
   }
 
   get todoComplete() {
-    return this.todoList.filter((t) => !t.completed) || [];
+    return this.todoList.filter((t) => t.completed) || [];
   }
 
   get todoPending() {
-    return this.todoList.filter((t) => t.completed) || [];
+    return this.todoList.filter((t) => !t.completed) || [];
+  }
+
+  get todos() {
+    return this.todoList || [];
   }
 
   delete(id: number) {
     const todo = this.todoList.find(t => t.id === id);
-    const modalRef = this.modal.open(ModalComponent, 
-    { 
-      width: '350px', 
-      height: '200px', 
-      data: {
-        title: 'Eliminar Todo',
-        message: `Estas seguro de eliminar la tarea: ${todo?.value}`} 
-    });
+    const modalRef = this.modal.open(ModalComponent,
+      {
+        width: '350px',
+        height: '200px',
+        data: {
+          title: 'Eliminar Todo',
+          message: `Estas seguro de eliminar la tarea: ${todo?.value}`
+        }
+      });
 
     modalRef.afterClosed().subscribe(result => {
       if (!result) return;
       this.todoList = this.todoList.filter((t, i) => t.id !== id);
     });
+  }
+
+  onToggleComplete(event: { id: number; completed: boolean }) {
+    setTimeout(() => {
+      debugger
+      this.todoList = this.todoList.map(t =>
+        t.id === event.id ? { ...t, completed: event.completed } : t
+      );
+    },0);
+  }
+
+  handleRequestEdit(todoToEdit: TodoList) {
+    // Primero, nos aseguramos de que ninguna otra tarea esté en modo edición.
+    this.todoList.forEach(t => {
+      if (t.id !== todoToEdit.id) {
+        t.isEditable = false;
+      }
+    });
+    // Luego, encontramos la tarea real en nuestra lista y activamos su modo edición.
+    const todo = this.todoList.find(t => t.id === todoToEdit.id);
+    if (todo) {
+      // Si el valor de isEditable viene en el payload (por el evento blur), lo usamos.
+      // Si no, simplemente lo invertimos.
+      todo.isEditable = todoToEdit.isEditable !== undefined ? todoToEdit.isEditable : !todo.isEditable;
+    }
+  }
+
+  saveTodoEdit(event: { value: string, id: number }) {
+    const todo = this.todoList.find(t => t.id === event.id);
+    if (todo) {
+      todo.value = event.value.trim();
+      todo.isEditable = false; // Desactivamos el modo edición al guardar.
+    }
   }
 }

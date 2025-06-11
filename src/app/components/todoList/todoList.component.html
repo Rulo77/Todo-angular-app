@@ -1,12 +1,21 @@
 <mat-selection-list class="overflow-auto max-h-80">
     @for(todo of todos; track todo.id; let i = $index){
-        <mat-list-option (selectedChange)="markTodoOk($event, todo)" [selected]="todo.completed"
-            (keydown.space)="$event.stopPropagation()">
-            <div class="flex justify-between items-center">
-                <input #todoInput class="p-3" [value]="todo.value" [disabled]="!todo.isEditable" [id]="todo.id"
-                    (keydown.enter)="editTodo(todo.id, $event)" />
-                <div (click)="$event.stopPropagation()">
-                    <button (click)="edit(todo.id, $event)">
+        <div class="p-0 m-2">
+        <!-- <mat-list-option (selectedChange)="markTodoOk($event, todo)" [selected]="todo.completed"
+        (keydown.space)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()"> -->
+            <div class="flex justify-between items-center bg-gray-100 border rounded hover:bg-gray-300">
+                <input 
+                    #todoInput 
+                    type="text"
+                    class="p-3 focus:border focus:rounded focus:border-sky-500 focus:outline focus:outline-sky-500" 
+                    [value]="todo.value" 
+                    [disabled]="!todo.isEditable" 
+                    [id]="todo.id"
+                    (keydown.enter)="finishEdit(todo, $event)"
+                    (blur)="finishEdit(todo, $event)"  
+                />
+                <div (click)="$event.stopPropagation()" class="p-1 flex gap-2 justify-center items-center">
+                    <button (click)="startEditMode(todo, $event)">
                         <mat-icon matTooltip="Editar Tarea" matTooltipPosition="below" aria-hidden="false" aria-label="Example home icon" fontIcon="edit"
                             class="cursor-pointer !text-green-600 hover:transform transition-all ease-in hover:scale-110 hover:!text-green-500"></mat-icon>
                     </button>
@@ -14,9 +23,10 @@
                         <mat-icon matTooltip="Eliminar Tarea" matTooltipPosition="below" aria-hidden="false" aria-label="Example home icon" fontIcon="delete"
                             class="!text-red-800 cursor-pointer hover:transform transition-all ease-in hover:scale-110 hover:!text-red-700"></mat-icon>
                     </button>
+                    <input class="size-6 cursor-pointer" type="checkbox" (click)="markTodoOk(!todo.completed, todo)" [checked]="todo.completed"/>
                 </div>
             </div>
-        </mat-list-option>
+        </div>
     }
     @empty {
         <p>No hay tareas</p>

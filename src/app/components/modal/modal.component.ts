@@ -50,7 +50,7 @@ export class ModalComponent{
         let aux = 0;
         
         let interval = setInterval(() => {
-            aux+=3;
+            aux+=5;
             this.value.set(aux);
             if(aux > 100){
                 clearInterval(interval);

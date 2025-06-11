@@ -2,10 +2,10 @@
   <mat-card-header class="flex justify-center !pt-8">
     <mat-card-title class="!font-bold !text-4xl">Todo App</mat-card-title>
   </mat-card-header>
-  <div class="p-3 mt-10">
-    <mat-form-field>
+  <div class="p-7 mt-10">
+    <mat-form-field class="w-full">
       <mat-label>Enter one todo</mat-label>
-      <input matInput placeholder="Junta a las 12:00 pm" [formControl]="todo" required (keydown.enter)="addTodo()" />
+      <input class="!w-full" matInput placeholder="Junta a las 12:00 pm" [formControl]="todo" required (keydown.enter)="addTodo()" />
 
       @if (errorMessage().trim() != '') {
       <mat-error>{{errorMessage()}}</mat-error>
@@ -17,13 +17,31 @@
     <mat-tab-group dynamicHeight headerPosition="below">
 
       <mat-tab label="All Todos" class="">
-        <app-todo-list [todos]="todoList" (deleteTodo)="delete($event)" />
+        <app-todo-list 
+          [todos]="todos" 
+          (deleteTodo)="delete($event)"  
+          (toggleComplete)="onToggleComplete($event)" 
+          (requestEdit)="handleRequestEdit($event)"
+          (sendEditTodo)="saveTodoEdit($event)"
+        />
       </mat-tab>
       <mat-tab label="Todos pendientes">
-        <app-todo-list [todos]="todoComplete" (deleteTodo)="delete($event)"></app-todo-list>
+        <app-todo-list 
+          [todos]="todoPending" 
+          (deleteTodo)="delete($event)" 
+          (toggleComplete)="onToggleComplete($event)" 
+          (requestEdit)="handleRequestEdit($event)" 
+          (sendEditTodo)="saveTodoEdit($event)"
+        />
       </mat-tab>
       <mat-tab label="Todos completados">
-        <app-todo-list [todos]="todoPending" (deleteTodo)="delete($event)" />
+        <app-todo-list 
+          [todos]="todoComplete" 
+          (deleteTodo)="delete($event)" 
+          (toggleComplete)="onToggleComplete($event)"
+          (requestEdit)="handleRequestEdit($event)"  
+          (sendEditTodo)="saveTodoEdit($event)"
+        />
       </mat-tab>
 
     </mat-tab-group>
