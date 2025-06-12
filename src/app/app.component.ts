@@ -74,13 +74,12 @@ export class AppComponent {
           isEditable: false,
           completed: false
         }
-        const newTodoList = [...this.todoList, newTodo];
-        console.log(newTodoList)
         this.cdr.detectChanges();
         // --- MEJORA DE INMUTABILIDAD ---
         // En lugar de this.todoList.push(newTodo), creamos un nuevo array.
         // Esto asegura que la detección de cambios de Angular se active correctamente.
-        this.todoList = [...newTodoList];
+        this.todoList = [...this.todoList, newTodo];
+        localStorage.setItem('todoList', JSON.stringify(this.todoList));
         this.todo.reset();
         this.errorMessage.set('');
       }
@@ -88,15 +87,22 @@ export class AppComponent {
   }
 
   get todoComplete() {
-    return this.todoList.filter((t) => t.completed) || [];
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
+    return todoList.filter((t) => t.completed) || [];
   }
 
   get todoPending() {
-    return this.todoList.filter((t) => !t.completed) || [];
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
+    return todoList.filter((t) => !t.completed) || [];
   }
 
   get todos() {
-    return this.todoList || [];
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
+    console.log(todoList)
+    return todoList;
   }
 
   delete(id: number) {
@@ -114,39 +120,50 @@ export class AppComponent {
     modalRef.afterClosed().subscribe(result => {
       if (!result) return;
       this.todoList = this.todoList.filter((t, i) => t.id !== id);
+      localStorage.setItem('todoList', JSON.stringify(this.todoList));
     });
   }
 
   onToggleComplete(event: { id: number; completed: boolean }) {
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
     setTimeout(() => {
-      debugger
-      this.todoList = this.todoList.map(t =>
+      this.todoList = todoList.map(t =>
         t.id === event.id ? { ...t, completed: event.completed } : t
       );
+      localStorage.setItem('todoList', JSON.stringify(this.todoList));
     },0);
   }
 
   handleRequestEdit(todoToEdit: TodoList) {
     // Primero, nos aseguramos de que ninguna otra tarea esté en modo edición.
-    this.todoList.forEach(t => {
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
+    todoList.forEach(t => {
       if (t.id !== todoToEdit.id) {
         t.isEditable = false;
+        localStorage.setItem('todoList', JSON.stringify(todoList));
       }
     });
+    
     // Luego, encontramos la tarea real en nuestra lista y activamos su modo edición.
-    const todo = this.todoList.find(t => t.id === todoToEdit.id);
+    const todo = todoList.find(t => t.id === todoToEdit.id);
     if (todo) {
       // Si el valor de isEditable viene en el payload (por el evento blur), lo usamos.
       // Si no, simplemente lo invertimos.
       todo.isEditable = todoToEdit.isEditable !== undefined ? todoToEdit.isEditable : !todo.isEditable;
+      localStorage.setItem('todoList', JSON.stringify(todoList));
     }
   }
 
   saveTodoEdit(event: { value: string, id: number }) {
-    const todo = this.todoList.find(t => t.id === event.id);
+    const todoListString = localStorage.getItem('todoList');
+    const todoList: TodoList[] = todoListString ? JSON.parse(todoListString) : [];
+    const todo = todoList.find(t => t.id === event.id);
     if (todo) {
       todo.value = event.value.trim();
       todo.isEditable = false; // Desactivamos el modo edición al guardar.
+      localStorage.setItem('todoList', JSON.stringify(todoList));
     }
   }
 }
